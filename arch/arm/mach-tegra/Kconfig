@@ -298,6 +298,13 @@ config MACH_KAI
        help
          Support for NVIDIA KAI development platform
 
+config TEGRA_CPU_OVERCLOCK
+       bool "Tegra3 CPU Overclocking"
+       depends on ARCH_TEGRA_3x_SOC
+       default y
+       help
+         Tegra3 CPU overclocking
+
 choice
        prompt "Tegra platform type"
        default TEGRA_SILICON_PLATFORM
