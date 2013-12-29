@@ -64,5 +64,4 @@ obj-$(CONFIG_MAX1749_VIBRATOR)	+= max1749.o
 obj-$(CONFIG_THERM_EST)		+= therm_est.o
 obj-$(CONFIG_TEGRA_THROUGHPUT)	+= tegra-throughput.o
 obj-$(CONFIG_SENSORS_AK8963)	+= akm8963.o
-obj-y           += driver_bck.o
 obj-$(CONFIG_BLUEDROID_PM)      += bluedroid_pm.o
