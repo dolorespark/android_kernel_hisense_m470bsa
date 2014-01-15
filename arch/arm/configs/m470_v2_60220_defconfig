@@ -2508,7 +2508,7 @@ CONFIG_USB_WDM=y
 #
 # also be needed; see USB_STORAGE Help for more info
 #
-CONFIG_USB_STORAGE=y
+CONFIG_USB_STORAGE=m
 # CONFIG_USB_UAS is not set
 CONFIG_USB_LIBUSUAL=y
 
