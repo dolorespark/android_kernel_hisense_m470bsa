@@ -55,6 +55,21 @@ void *wifi_get_country_code(char *ccode) { return NULL; }
 #endif /* CONFIG_WIFI_CONTROL_FUNC */
 #endif /* CUSTOMER_HW2 */
 
+/* DoPa (20130112) - fix for random MAC address */
+#ifdef GET_CUSTOM_MAC_ENABLE
+
+#define MAC_TXT_LEN 12
+#define MAC_BIN_LEN 6
+#define MAC_OFFSET  0x4A
+
+static int dhd_custom_fix_mac_address(unsigned char *buf);
+
+/* 0=haven't tried, 1=has valid address -1=invalid, don't use */
+static int have_mac_from_bck = 0;
+static char mac_from_bck[MAC_BIN_LEN] = {0,0,0,0,0,0};
+
+#endif /* GET_CUSTOM_MAC_ENABLE */
+
 #if defined(OOB_INTR_ONLY)
 
 #if defined(BCMLXSDMMC)
@@ -181,6 +196,11 @@ dhd_custom_get_mac_address(unsigned char *buf)
 	/* Customer access to MAC address stored outside of DHD driver */
 #if defined(CUSTOMER_HW2) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	ret = wifi_get_mac_addr(buf);
+	/* 00:34:9A is the signature of a random MAC address generated
+	 * when a valid address doesn't appear on the kernel's commandline
+	 */
+	if (buf[0] == 0x00 && buf[1] == 0x34 && buf[2] == 0x9a)
+		ret = dhd_custom_fix_mac_address(buf);
 #endif
 
 #ifdef EXAMPLE_GET_MAC
@@ -193,6 +213,79 @@ dhd_custom_get_mac_address(unsigned char *buf)
 
 	return ret;
 }
+
+/* DoPa (20130112) - fix for random MAC address */
+static int
+dhd_custom_fix_mac_address(unsigned char *buf)
+{
+	int err = 0;
+	int i, j, mac_valid;
+	loff_t pos;
+	mm_segment_t fs;
+	struct file *f = NULL;
+	char readbuf[16];
+
+	if (have_mac_from_bck) {
+		if (have_mac_from_bck == 1)
+			memcpy(buf, mac_from_bck, MAC_BIN_LEN);
+		return 0;
+	}
+	have_mac_from_bck = -1;
+
+	f = filp_open("/dev/block/platform/sdhci-tegra.3/by-name/BCK", O_RDONLY, 0);
+	if (IS_ERR(f)) {
+		WL_ERROR(("%s - error %ld opening BCK partition\n", __FUNCTION__, PTR_ERR(f)));
+		return 0;
+	}
+
+	pos = MAC_OFFSET;
+	fs = get_fs();
+	set_fs(get_ds());
+	err = vfs_read(f, readbuf, MAC_TXT_LEN, &pos);
+	set_fs(fs);
+	filp_close(f, NULL);
+
+	if (err < 0) {
+		WL_ERROR(("%s - error %d reading BCK partition\n", __FUNCTION__, err));
+		return 0;
+	}
+
+	mac_valid = 0;
+	for (i = 0, j = 0; i < MAC_TXT_LEN; i++) {
+		char c = readbuf[i];
+		if (c >= 0x30 && c <= 0x39)
+			c -= 0x30;
+		else if (c >= 0x41 && c <= 0x46)
+			c -= 0x37;
+		else {
+			WL_ERROR(("%s - invalid character in stored MAC address\n", __FUNCTION__));
+			return 0;
+		}
+
+		if (!(i & 1)) {
+			mac_from_bck[j] = c << 4;
+		} else {
+			mac_from_bck[j] += c;
+			j++;
+		}
+		mac_valid |= c;
+	}
+
+	if ((!mac_valid)||
+		((mac_from_bck[0] == 0xFE) && (mac_from_bck[1] == 0xFF) &&
+		 (mac_from_bck[2] == 0xFE) && (mac_from_bck[3] == 0xFF) &&
+		 (mac_from_bck[4] == 0xFE) && (mac_from_bck[5] == 0xFF))) {
+		WL_ERROR(("%s - stored MAC address is invalid\n", __FUNCTION__));
+		return 0;
+	}
+
+	have_mac_from_bck = 1;
+	memcpy(buf, mac_from_bck, MAC_BIN_LEN);
+	WL_ERROR(("%s - using MAC address stored in BCK partition\n", __FUNCTION__));
+
+	return 0;
+}
+
 #endif /* GET_CUSTOM_MAC_ENABLE */
 
 /* Customized Locale table : OPTIONAL feature */
