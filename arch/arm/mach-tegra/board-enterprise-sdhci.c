@@ -41,6 +41,9 @@
 #define ENTERPRISE_WLAN_WOW	TEGRA_GPIO_WLAN_HOST_WAKE
 #define ENTERPRISE_SD_CD TEGRA_GPIO_PI5
 #define MAC_ADDR_LEN		6
+#define MAC_CMDLINE_LEN     17
+#define MAC_BCK_LEN         12
+#define MAC_BCK_OFFSET      0x4A
 
 static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
@@ -50,6 +53,8 @@ static int enterprise_wifi_reset(int on);
 static int enterprise_wifi_power(int on);
 static int enterprise_wifi_set_carddetect(int val);
 static int enterprise_wifi_get_mac_addr(unsigned char *buf);
+static int enterprise_wifi_validate_mac(unsigned char *buf);
+static int enterprise_wifi_read_mac_from_bck(void);
 extern unsigned int his_hw_ver;
 extern unsigned int his_board_version;
 extern char his_wifi_addr[18];
@@ -292,80 +297,115 @@ static int enterprise_wifi_reset(int on)
 	return 0;
 }
 
+/* DoPa (20140116) - if the wifi MAC address is missing from the
+ * kernel's commandline, attempt to read it from the BCK partition;
+ * if that fails, generate a random value.  In both cases, plug the
+ * value into the field that normally contains the cmdline argument.
+ */
 static int enterprise_wifi_get_mac_addr(unsigned char *buf)
 {
-	//struct file *filp=NULL;
-	//struct inode *inode;
-	//unsigned long magic;
-	//off_t fsize;
-	//loff_t pos = 0;
-	//ssize_t retValue = 0;
-	char readbuf[18];
-	char tmp[MAC_ADDR_LEN*2];
-	//mm_segment_t old_fs;
-	//int sz;
-	int i, ii=0;
-	char mac_valid;
-	uint rand_mac;
-	//char iovbuf[MAC_ADDR_LEN];
-	//printk("liuqiang : custom mac addr %s \n",his_wifi_addr);
+	/* see if the existing value is valid */
+	if (enterprise_wifi_validate_mac(buf) != 0) {
 
+		/* if not, try to get it from the BCK partition */
+		if (enterprise_wifi_read_mac_from_bck() != 0 ||
+			enterprise_wifi_validate_mac(buf) != 0) {
 
-	memcpy(readbuf,his_wifi_addr,18);
-
-	for(i = 0; i < (MAC_ADDR_LEN*2+5); i++){
-		if(readbuf[i] == ':')
-			continue;
-		else if((readbuf[i] >= 48)&&(readbuf[i] <= 57))
-			readbuf[i] -= 48;
-		else if((readbuf[i] >= 65)&&(readbuf[i] <= 70))
-			readbuf[i] -= 55;
-		else
-			goto macerr;
-		tmp[ii] = readbuf[i];
-		ii++;
+			/* if all else fails, fake it */
+			uint rand_mac;
+			srandom32((uint)jiffies);
+			rand_mac = random32();
+			buf[0] = 0x00;
+			buf[1] = 0x34;
+			buf[2] = 0x9a;
+			buf[3] = (unsigned char)(rand_mac & 0x0F) | 0xF0;
+			buf[4] = (unsigned char)(rand_mac >> 8);
+			buf[5] = (unsigned char)(rand_mac >> 16);
+			snprintf(his_wifi_addr, sizeof(his_wifi_addr), "%02X:%02X:%02X:%02X:%02X:%02X",
+					 buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+		}
 	}
+
+	return 0;
+}
+
+/* DoPa (20140116) */
+static int enterprise_wifi_validate_mac(unsigned char *buf)
+{
+	int i, j, s;
+	char c, mac_valid;
 
 	mac_valid = 0;
+	for (i = 0, j = 0, s = 0; i < MAC_CMDLINE_LEN && j < MAC_ADDR_LEN ; i++) {
+		c = his_wifi_addr[i];
+		if (c == ':')
+			continue;
 
-	for(i = 0; i <MAC_ADDR_LEN; i++){
-		buf[i] = ((tmp[i*2] << 4) | tmp[i*2+1]);
-		mac_valid |= buf[i];
-		//printk("buf[%d]=0x%02x\n", i, buf[i]);
+		if (c >= '0' && c <= '9')
+			c -= 0x30;
+		else if (c >= 'A' && c <= 'F')
+			c -= 0x37;
+		else if (c >= 'a' && c <= 'f')
+			c -= 0x57;
+		else
+			break;
+
+		if (!s) {
+			buf[j] = c << 4;
+		} else {
+			buf[j] += c;
+			j++;
+		}
+		s = !s;
+		mac_valid |= c;
 	}
 
-	if((!mac_valid)||((buf[0] == 0xFE)&&(buf[1] == 0xFF)&&(buf[2] == 0xFE)&&
-					  (buf[3] == 0xFF)&&(buf[4] == 0xFE)&&(buf[5] == 0xFF)))
-		goto macerr;
-	else
-		goto exit;
+	if (i < MAC_CMDLINE_LEN || j < MAC_ADDR_LEN || !mac_valid ||
+		((buf[0] == 0xFE) && (buf[1] == 0xFF) &&
+		 (buf[2] == 0xFE) && (buf[3] == 0xFF) &&
+		 (buf[4] == 0xFE) && (buf[5] == 0xFF)))
+		return -1;
 
-macerr:
-	/* Generate random MAC address */
-	printk("[DHD]: MAC is invalid, use random MAC address!\n");
-
-	srandom32((uint)jiffies);
-	rand_mac = random32();
-	buf[0] = 0x00;
-	buf[1] = 0x34;
-	buf[2] = 0x9a;
-	buf[3] = (unsigned char)(rand_mac & 0x0F) | 0xF0;
-	buf[4] = (unsigned char)(rand_mac >> 8);
-	buf[5] = (unsigned char)(rand_mac >> 16);
-
-	//for(i = 0; i <MAC_ADDR_LEN; i++){
- 	//	printk("buf[%d]=0x%02x\n", i, buf[i]);
- 	//}
-
-
- exit:
- 	/* close file before return */
-	//filp_close(filp, current->files);
- 	/* restore previous address limit */
-	//set_fs(old_fs);
- 
- 	return 0;
+	return 0;
 }
+
+/* DoPa (20140116) */
+static int enterprise_wifi_read_mac_from_bck(void)
+{
+	int i, j, err;
+	struct file *f = NULL;
+	loff_t pos;
+	mm_segment_t fs;
+	char readbuf[MAC_BCK_LEN];
+
+	/* Yes, we know that reading from a "file" is verboten, but it was
+	 * the manufacturer that made the policy decision to put this raw
+	 * data in an unformatted partition, not your humble programmer.
+	 */
+	f = filp_open("/dev/block/platform/sdhci-tegra.3/by-name/BCK", O_RDONLY, 0);
+	if (IS_ERR(f))
+		return -1;
+
+	pos = MAC_BCK_OFFSET;
+	fs = get_fs();
+	set_fs(get_ds());
+	err = vfs_read(f, readbuf, MAC_BCK_LEN, &pos);
+	set_fs(fs);
+	filp_close(f, NULL);
+
+	if (err < 0)
+		return -1;
+
+	for (i = 0, j = 0; i < MAC_BCK_LEN; i++, j++) {
+		if (i && !(i & 1))
+			his_wifi_addr[j++] = ':';
+		his_wifi_addr[j] = readbuf[i];
+	}
+	his_wifi_addr[j] = 0;
+
+	return 0;
+}
+
 #ifdef CONFIG_TEGRA_PREPOWER_WIFI
 static int __init enterprise_wifi_prepower(void)
 {
