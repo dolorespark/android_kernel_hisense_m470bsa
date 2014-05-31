@@ -1404,6 +1404,41 @@ static int tegra_vbus_session(struct usb_gadget *gadget, int is_active)
 }
 
 /**
+ * DoPa (20140511) - add support for OTG charging
+ * If external power is detected on the vbus, tegra_change_otg_state()
+ * calls this to enable/disable charging the battery at a USB current level.
+ */
+int tegra_vbus_otg_charge(struct usb_gadget *gadget, int is_active)
+{
+	struct tegra_udc *udc = container_of(gadget, struct tegra_udc, gadget);
+	unsigned long flags;
+	printk("****%s(%d) turn VBUS state from %s to %s\n", __func__, __LINE__,
+		udc->vbus_active ? "on" : "off", is_active ? "on" : "off");
+
+	if (udc->vbus_active && !is_active) {
+		spin_lock_irqsave(&udc->lock, flags);
+		udc->vbus_active = 0;
+		udc->connect_type = CONNECT_TYPE_NONE;
+		spin_unlock_irqrestore(&udc->lock,flags);
+		tegra_usb_set_charging_current(udc);
+#if defined(CONFIG_TOUCHSCREEN_FT5X06)
+		ft5x0x_anti_interference_close();
+#endif
+	} else if (!udc->vbus_active && is_active){
+		printk("****%s(%d) setting charging current\n", __func__, __LINE__);
+		udc->vbus_active = 1;
+		udc->connect_type = CONNECT_TYPE_SDP;
+		tegra_usb_set_charging_current(udc);
+#if defined(CONFIG_TOUCHSCREEN_FT5X06)
+		ft5x0x_anti_interference_open();
+#endif
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(tegra_vbus_otg_charge);
+
+/**
  * Constrain controller's VBUS power usage.
  * This call is used by gadget drivers during SET_CONFIGURATION calls,
  * reporting how much power the device may consume. For example, this

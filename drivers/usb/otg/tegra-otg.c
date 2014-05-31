@@ -57,6 +57,7 @@ static bool boot_on = true;
 extern void tegra_vbus_detect_event(bool plug);
 extern bool tps8003x_vbus_status(void);
 extern enum charging_type tps8003x_charger_type(void);
+extern int tegra_vbus_otg_charge(struct usb_gadget *gadget, int is_active);
 #endif
 
 struct tegra_otg_data {
@@ -246,11 +247,22 @@ static void tegra_change_otg_state(struct tegra_otg_data *tegra,
 			else if (to == OTG_STATE_A_HOST) {
 				tegra_otg_notify_event(otg, USB_EVENT_ID);
 				tegra_start_host(tegra);
+#ifdef CONFIG_CHARGER_TPS8003X
+				if (tps8003x_vbus_status())
+					tegra_vbus_otg_charge(otg->gadget, 1);
+				pr_info("tegra-otg: enter HOST state - vbus= %d  chgr_type= %d\n",
+					    tps8003x_vbus_status(), tps8003x_charger_type());
+#endif
 			}
 		} else if (from == OTG_STATE_A_HOST) {
 			if (to == OTG_STATE_A_SUSPEND) {
 				tegra_stop_host(tegra);
 				tegra_otg_notify_event(otg, USB_EVENT_NONE);
+#ifdef CONFIG_CHARGER_TPS8003X
+				tegra_vbus_otg_charge(otg->gadget, 0);
+				pr_info("tegra-otg: exit HOST state - vbus= %d  chgr_type= %d\n",
+					    tps8003x_vbus_status(), tps8003x_charger_type());
+#endif
 			}
 		} else if (from == OTG_STATE_B_PERIPHERAL && otg->gadget) {
 			if (to == OTG_STATE_A_SUSPEND) {
@@ -313,6 +325,18 @@ static void irq_work(struct work_struct *work)
 		to = OTG_STATE_A_SUSPEND;
 
 	spin_unlock_irqrestore(&tegra->lock, flags);
+
+	/* DoPa (20140511) - when an OTG cable is plugged in, it is sometimes
+	 * misidentified as a peripheral connection, then shortly thereafter
+	 * as a host connection;  this transition is not handled correctly by
+	 * tegra_change_otg_state() and causes a null pointer exception;
+	 * hopefully, transitioning from peripheral->suspend->host will fix this
+	 */
+	if (from == OTG_STATE_B_PERIPHERAL && to == OTG_STATE_A_HOST) {
+		pr_info("tegra-otg: inserting SUSPEND between transition from PERIPHERAL to HOST\n");
+		tegra_change_otg_state(tegra, OTG_STATE_A_SUSPEND);
+	}
+
 	tegra_change_otg_state(tegra, to);
 	mutex_unlock(&tegra->irq_work_mutex);
 }

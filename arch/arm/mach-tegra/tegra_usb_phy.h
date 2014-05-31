@@ -122,6 +122,7 @@ struct tegra_usb_phy {
 	bool bus_reseting;
 	bool linkphy_init;
 	bool hot_plug;
+	bool vbus_reg_on; /* DoPa (20140511) - added to support OTG charging */
 };
 
 int usb_phy_reg_status_wait(void __iomem *reg, u32 mask,

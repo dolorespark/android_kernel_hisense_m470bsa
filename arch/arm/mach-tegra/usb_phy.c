@@ -50,6 +50,10 @@
 #define DBG(stuff...)		do {} while (0)
 #endif
 
+#ifdef CONFIG_CHARGER_TPS8003X
+extern bool tps8003x_vbus_status(void);
+#endif
+
 static void print_usb_plat_data_info(struct tegra_usb_phy *phy)
 {
 	struct tegra_usb_platform_data *pdata = phy->pdata;
@@ -88,13 +92,19 @@ static void print_usb_plat_data_info(struct tegra_usb_phy *phy)
 	}
 }
 
+/* DoPa (20140511) - added phy->vbus_reg_on to support OTG charging:
+ * don't disable this regulator if wasn't previously enabled
+ */
 static void usb_host_vbus_enable(struct tegra_usb_phy *phy, bool enable)
 {
 	if (phy->vbus_reg) {
-		if (enable)
-			regulator_enable(phy->vbus_reg);
-		else
-			regulator_disable(phy->vbus_reg);
+		if (phy->vbus_reg_on != enable) {
+			if (enable)
+				regulator_enable(phy->vbus_reg);
+			else
+				regulator_disable(phy->vbus_reg);
+			phy->vbus_reg_on = enable;
+		}
 	} else {
 		int gpio = phy->pdata->u_data.host.vbus_gpio;
 		if (gpio == -1)
@@ -235,6 +245,9 @@ struct tegra_usb_phy *tegra_usb_phy_open(struct platform_device *pdev)
 	struct resource *res;
 	int err;
 	int plat_data_size = sizeof(struct tegra_usb_platform_data);
+#ifdef CONFIG_CHARGER_TPS8003X
+	bool vbus_detected;
+#endif
 
 	DBG("%s(%d) inst:[%d]\n", __func__, __LINE__, pdev->id);
 	pdata = dev_get_platdata(&pdev->dev);
@@ -338,7 +351,37 @@ struct tegra_usb_phy *tegra_usb_phy_open(struct platform_device *pdev)
 				}
 			}
 		}
+
+#ifdef CONFIG_CHARGER_TPS8003X
+		/* DoPa (20140511) - add support for OTG charging
+		 * If external power can be detected on the vbus, do not enable the
+		 * vbus regulator which normally supplies power in host (OTG) mode.
+		 * Doing so will disable the mechanism used to detect external power
+		 * and will prevent charging.  Note that this mechanism may already
+		 * be on or we may have to enable it.
+		 */
+		vbus_detected = tps8003x_vbus_status();
+		if (!vbus_detected) {
+			usb_phy_dev_vbus_pmu_irq_thr(0, (void *)phy);
+			mdelay(15);
+
+			vbus_detected = tps8003x_vbus_status();
+			if (!vbus_detected) {
+				if (phy->ctrl_clk_on) {
+					clk_disable(phy->ctrlr_clk);
+					phy->ctrl_clk_on = false;
+				}
+				if (phy->vdd_reg && phy->vdd_reg_on) {
+					regulator_disable(phy->vdd_reg);
+					phy->vdd_reg_on = false;
+				}
+				usb_host_vbus_enable(phy, true);
+			}
+		}
+		INFO("OTG charging%s enabled\n", vbus_detected ? "" : " not");
+#else
 		usb_host_vbus_enable(phy, true);
+#endif
 	}
 
 	err = tegra_usb_phy_init_ops(phy);
