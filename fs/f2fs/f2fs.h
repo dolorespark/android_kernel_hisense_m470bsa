@@ -969,6 +969,9 @@ static inline int cond_clear_inode_flag(struct f2fs_inode_info *fi, int flag)
 	return 0;
 }
 
+/* DoPa (20140729) - moved from 'acl.c' to 'file.c' to remove an unnecessary
+					 dependency on CONFIG_F2FS_FS_POSIX_ACL
+*/
 int f2fs_android_emu(struct f2fs_sb_info *, struct inode *, u32 *, u32 *,
 		umode_t *);
 

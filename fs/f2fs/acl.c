@@ -303,6 +303,9 @@ int f2fs_acl_chmod(struct inode *inode)
 	return error;
 }
 
+/* DoPa (20140729) - moved to 'file.c' to remove an unnecessary
+					 dependency on CONFIG_F2FS_FS_POSIX_ACL
+
 int f2fs_android_emu(struct f2fs_sb_info *sbi, struct inode *inode,
 		u32 *uid, u32 *gid, umode_t *mode)
 {
@@ -328,6 +331,7 @@ int f2fs_android_emu(struct f2fs_sb_info *sbi, struct inode *inode,
 
 	return 0;
 }
+*/
 
 static size_t f2fs_xattr_list_acl(struct dentry *dentry, char *list,
 		size_t list_size, const char *name, size_t name_len, int type)
