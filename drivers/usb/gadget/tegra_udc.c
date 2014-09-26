@@ -1286,6 +1286,10 @@ static int tegra_usb_set_charging_current(struct tegra_udc *udc)
 		dev_info(dev, "detected non-standard charging port");
 		max_ua = USB_CHARGING_NON_STANDARD_CHARGER_CURRENT_LIMIT_UA;
 		break;
+	case CONNECT_TYPE_OTG:
+		dev_info(dev, "detected OTG port");
+		max_ua = USB_CHARGING_OTG_CURRENT_LIMIT_UA;
+		break;
 	default:
 		dev_info(dev, "detected USB charging type is unknown");
 		max_ua = 0;
@@ -1406,7 +1410,7 @@ static int tegra_vbus_session(struct usb_gadget *gadget, int is_active)
 /**
  * DoPa (20140511) - add support for OTG charging
  * If external power is detected on the vbus, tegra_change_otg_state()
- * calls this to enable/disable charging the battery at a USB current level.
+ * calls this to enable/disable charging the battery at a 900ma current level.
  */
 int tegra_vbus_otg_charge(struct usb_gadget *gadget, int is_active)
 {
@@ -1427,7 +1431,7 @@ int tegra_vbus_otg_charge(struct usb_gadget *gadget, int is_active)
 	} else if (!udc->vbus_active && is_active){
 		printk("****%s(%d) setting charging current\n", __func__, __LINE__);
 		udc->vbus_active = 1;
-		udc->connect_type = CONNECT_TYPE_SDP;
+		udc->connect_type = CONNECT_TYPE_OTG;
 		tegra_usb_set_charging_current(udc);
 #if defined(CONFIG_TOUCHSCREEN_FT5X06)
 		ft5x0x_anti_interference_open();
