@@ -212,77 +212,56 @@ config MACH_TEGRA_ENTERPRISE
        help
          Support for NVIDIA Enterprise development platform
 
-config MACH_M470
-       bool "M470 board"
+config BOARD_M470
+       bool "M470-family board"
        depends on MACH_TEGRA_ENTERPRISE
 	   help
          Support for Hisense M470 development platform
 
-config BOARD_M470
-       bool "M470"
-       depends on MACH_M470
-	   help
-         Support for Hisense M470 development platform
-
 config BOARD_M470_V1
-       bool "M470"
+       bool "M470-family board v1"
        depends on BOARD_M470
 	   help
          Support for Hisense M470 V1 development platform
 
 config BOARD_M470_V2
-       bool "M470"
+       bool "M470-family board v2"
        depends on BOARD_M470
 	   help
          Support for Hisense M470 V2 development platform
 
+config MACH_M470
+       bool "M470 variant"
+       depends on BOARD_M470
+	   help
+         Support for Hisense M470 development platform
+
 config MACH_M470BSD
-       bool "M470BSD board"
-       depends on MACH_TEGRA_ENTERPRISE
+       bool "M470BSD variant"
+       depends on BOARD_M470
 	   help
          Support for Hisense M470BSD development platform
 
-config BOARD_M470BSD
-       bool "M470BSD"
-       depends on MACH_M470BSD
+config MACH_M470BSE
+       bool "M470BSE variant"
+       depends on BOARD_M470
 	   help
-         Support for Hisense M470BSD development platform
-
-config BOARD_M470BSD_V1
-       bool "M470BSD"
-       depends on BOARD_M470BSD
-	   help
-         Support for Hisense M470BSD V1 development platform
-
-config BOARD_M470BSD_V2
-       bool "M470BSD"
-       depends on BOARD_M470BSD
-	   help
-         Support for Hisense M470BSD V2 development platform
+         Support for Hisense M470BSE development platform
 
 config MACH_M470BSS
-       bool "M470BSS board"
-       depends on MACH_TEGRA_ENTERPRISE
+       bool "M470BSS variant"
+       depends on BOARD_M470
 	   help
          Support for Hisense M470BSS development platform
 
-config BOARD_M470BSS
-       bool "M470BSS"
-       depends on MACH_M470BSS
+config MACH_M470_EMULATION
+       bool "M470 compatibility"
+       default n
+       depends on MACH_M470
 	   help
-         Support for Hisense M470BSS development platform
-
-config BOARD_M470BSS_V1
-       bool "M470BSS"
-       depends on BOARD_M470BSS
-	   help
-         Support for Hisense M470BSS V1 development platform
-
-config BOARD_M470BSS_V2
-       bool "M470BSS"
-       depends on BOARD_M470BSS
-	   help
-         Support for Hisense M470BSS V2 development platform
+         Use m470 as the machine name for all MACH_M470
+         variants (BSD/BSE/BSS). Both MACH_M470 and the
+         variant (e.g. MACH_M470BSE) must be selected.
 
 config MACH_TAI
        bool "Tai board"

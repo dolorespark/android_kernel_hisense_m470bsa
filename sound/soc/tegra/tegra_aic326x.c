@@ -691,7 +691,10 @@ static int tegra_aic326x_voice_call_hw_params(
 
 	if (machine_is_tegra_enterprise() ||
 	    machine_is_tai() ||
-	    machine_is_m470()) {
+	    machine_is_m470() ||
+	    machine_is_m470bsd() ||
+	    machine_is_m470bse() ||
+	    machine_is_m470bss()) {
 		switch (pdata->i2s_param[HIFI_CODEC].i2s_mode) {
 			case TEGRA_DAIFMT_I2S :
 				i2s_daifmt |= SND_SOC_DAIFMT_I2S;
@@ -751,7 +754,11 @@ static int tegra_aic326x_voice_call_hw_params(
 		return err;
 	}
 
-	if ((!machine_is_tegra_enterprise()) && (!machine_is_m470())) {
+	if ((!machine_is_tegra_enterprise()) &&
+	    (!machine_is_m470()) &&
+	    (!machine_is_m470bsd()) &&
+	    (!machine_is_m470bse()) &&
+	    (!machine_is_m470bss())) {
 		if (params_rate(params) == 8000) {
 			/* Change these Settings for 8KHz*/
 			pcmdiv = 1;
@@ -1284,7 +1291,10 @@ static __devinit int tegra_aic326x_driver_probe(struct platform_device *pdev)
 
 	if (machine_is_tegra_enterprise() ||
 	    machine_is_tai() ||
-	    machine_is_m470()) {
+	    machine_is_m470() ||
+	    machine_is_m470bsd() ||
+	    machine_is_m470bse() ||
+	    machine_is_m470bss()) {
 		tegra_aic326x_dai[DAI_LINK_HIFI].codec_name = "tlv320aic3262-codec";
 		tegra_aic326x_dai[DAI_LINK_VOICE_CALL].codec_name = "tlv320aic3262-codec";
 		tegra_aic326x_dai[DAI_LINK_VOICE_CALL].codec_dai_name = "aic326x-asi1";

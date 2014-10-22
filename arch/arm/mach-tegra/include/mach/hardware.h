@@ -44,7 +44,7 @@ enum tegra_revision {
 	TEGRA_REVISION_MAX,
 };
 
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 //Hisese Revision
 enum {
 	M470_REVISION_2A_TS_3V3	= 1,//V2.0 A

@@ -99,7 +99,7 @@
 #define DRIVER_VERSION		"1.0.2"
 
 #define WINDOW_T  (3*60)		//Don't allow capacity changes happen in 3 min when plug/unplug event happen
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 #define CHARGER_THROSHOLD		2
 #define CHARGER_THROSHOLD_WINDOW	1
 #define CHARGER_THROSHOLD_MID		3
@@ -114,7 +114,7 @@ static unsigned long long run_time = 0;
 static int batt_continue_reverse_times = 0;
 
 #define TEMP_BAD_VALUE		-10000
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 #define BATTERY_REVERSE_LOW_POWER_BASE	120//120mV for Pad
 #define BATTERY_CHRGING_TIME_94_95	900//15 Min
 #define BATTERY_CHRGING_TIME_95_96	900//15 Min
@@ -222,7 +222,7 @@ struct batt_time batt_sleep_time = {
 	.init_time = 0,
 	.start_time = 0,
 };
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 //same with M370
 static int tps80031_temp_table[] = { 
 	/* adc code for temperature in degree C */
@@ -249,7 +249,7 @@ static int tps80031_temp_table[] = {  //Version Pre-V0.00 for US9230 20121110(Ju
 };
 #endif
 
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 //To-Do Update for M470
 static BattMapInttoInt batt_cap[] =
 {
@@ -1365,7 +1365,7 @@ static void adc_bat_charging_handler(struct tps80031_device_info *di)
 static uint8_t  pick_reverse_value(struct tps80031_device_info *di,uint8_t capacity)
 {
 	uint8_t fix_capacity = 0;
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	if(di->ac_online == 0 && di->usb_online == 0 ) {
 		if(di->cache.capacity_unplug == 0)
 			fix_capacity = capacity;
@@ -1694,7 +1694,7 @@ static void battery_monitor(struct work_struct *work)
 		dev_err(di->dev, "Wrong  Battery Voltage Detected: %d\n",adc_voltage);
 	//Get Charging Current Now
 	tps8003x_battery_fg_current(di);
-#if (defined(CONFIG_BOARD_M470)||defined(CONFIG_BOARD_M470BSD)||defined(CONFIG_BOARD_M470BSS))  //To-Do Remove  When PWR_I2C stable
+#if defined(CONFIG_BOARD_M470)  //To-Do Remove  When PWR_I2C stable
 	if(adc_voltage == -1)
 		di->charging_status = POWER_SUPPLY_STATUS_UNKNOWN;
 	else

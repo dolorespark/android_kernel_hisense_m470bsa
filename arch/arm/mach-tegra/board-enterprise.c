@@ -1093,7 +1093,7 @@ static void __init tegra_enterprise_init(void)
 static void __init tegra_enterprise_reserve(void)
 {
 #if defined(CONFIG_NVMAP_CONVERT_CARVEOUT_TO_IOVMM)
-#if (defined(CONFIG_BOARD_M470) || defined(CONFIG_BOARD_M470BSD) || defined(CONFIG_BOARD_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	tegra_reserve(0, SZ_8M, SZ_8M);
 #else
 	tegra_reserve(0, SZ_4M, SZ_8M);
@@ -1104,50 +1104,84 @@ static void __init tegra_enterprise_reserve(void)
 	tegra_ram_console_debug_reserve(SZ_1M);
 }
 
+#if defined(CONFIG_MACH_TEGRA_ENTERPRISE) || defined(CONFIG_BOARD_M470)
 static const char *enterprise_dt_board_compat[] = {
 	"nvidia,enterprise",
 	NULL
 };
+#endif
 
+#if defined(CONFIG_MACH_TAI)
 static const char *tai_dt_board_compat[] = {
 	"nvidia,tai",
 	NULL
 };
+#endif
 
-#if defined(CONFIG_BOARD_M470)
-MACHINE_START(M470, "m470")
-	.boot_params    = 0x80000100,
-	.map_io         = tegra_map_common_io,
-	.reserve        = tegra_enterprise_reserve,
-	.init_early	= tegra_init_early,
-	.init_irq       = tegra_init_irq,
-	.timer          = &tegra_timer,
-	.init_machine   = tegra_enterprise_init,
-	.dt_compat	= enterprise_dt_board_compat,
-MACHINE_END
-#elif defined(CONFIG_BOARD_M470BSD)
-MACHINE_START(M470BSD, "m470bsd")
-	.boot_params    = 0x80000100,
-	.map_io         = tegra_map_common_io,
-	.reserve        = tegra_enterprise_reserve,
-	.init_early	= tegra_init_early,
-	.init_irq       = tegra_init_irq,
-	.timer          = &tegra_timer,
-	.init_machine   = tegra_enterprise_init,
-	.dt_compat	= enterprise_dt_board_compat,
-MACHINE_END
-#elif defined(CONFIG_BOARD_M470BSS)
-MACHINE_START(M470BSS, "m470bss")
-	.boot_params    = 0x80000100,
-	.map_io         = tegra_map_common_io,
-	.reserve        = tegra_enterprise_reserve,
-	.init_early	= tegra_init_early,
-	.init_irq       = tegra_init_irq,
-	.timer          = &tegra_timer,
-	.init_machine   = tegra_enterprise_init,
-	.dt_compat	= enterprise_dt_board_compat,
-MACHINE_END
+#define M470_MACHINE_NAME	"m470"
+#if defined(CONFIG_MACH_M470_EMULATION)
+	#define M470BSD_MACHINE_NAME	M470_MACHINE_NAME
+	#define M470BSE_MACHINE_NAME	M470_MACHINE_NAME
+	#define M470BSS_MACHINE_NAME	M470_MACHINE_NAME
 #else
+	#define M470BSD_MACHINE_NAME	"m470bsd"
+	#define M470BSE_MACHINE_NAME	"m470bse"
+	#define M470BSS_MACHINE_NAME	"m470bss"
+#endif
+
+#if defined(CONFIG_MACH_M470)
+MACHINE_START(M470, M470_MACHINE_NAME)
+	.boot_params    = 0x80000100,
+	.map_io         = tegra_map_common_io,
+	.reserve        = tegra_enterprise_reserve,
+	.init_early	= tegra_init_early,
+	.init_irq       = tegra_init_irq,
+	.timer          = &tegra_timer,
+	.init_machine   = tegra_enterprise_init,
+	.dt_compat	= enterprise_dt_board_compat,
+MACHINE_END
+#endif
+
+#if defined(CONFIG_MACH_M470BSD)
+MACHINE_START(M470BSD, M470BSD_MACHINE_NAME)
+	.boot_params    = 0x80000100,
+	.map_io         = tegra_map_common_io,
+	.reserve        = tegra_enterprise_reserve,
+	.init_early	= tegra_init_early,
+	.init_irq       = tegra_init_irq,
+	.timer          = &tegra_timer,
+	.init_machine   = tegra_enterprise_init,
+	.dt_compat	= enterprise_dt_board_compat,
+MACHINE_END
+#endif
+
+#if defined(CONFIG_MACH_M470BSE)
+MACHINE_START(M470BSE, M470BSE_MACHINE_NAME)
+	.boot_params    = 0x80000100,
+	.map_io         = tegra_map_common_io,
+	.reserve        = tegra_enterprise_reserve,
+	.init_early	= tegra_init_early,
+	.init_irq       = tegra_init_irq,
+	.timer          = &tegra_timer,
+	.init_machine   = tegra_enterprise_init,
+	.dt_compat	= enterprise_dt_board_compat,
+MACHINE_END
+#endif
+
+#if defined(CONFIG_MACH_M470BSS)
+MACHINE_START(M470BSS, M470BSS_MACHINE_NAME)
+	.boot_params    = 0x80000100,
+	.map_io         = tegra_map_common_io,
+	.reserve        = tegra_enterprise_reserve,
+	.init_early	= tegra_init_early,
+	.init_irq       = tegra_init_irq,
+	.timer          = &tegra_timer,
+	.init_machine   = tegra_enterprise_init,
+	.dt_compat	= enterprise_dt_board_compat,
+MACHINE_END
+#endif
+
+#if defined(CONFIG_MACH_TEGRA_ENTERPRISE)
 MACHINE_START(TEGRA_ENTERPRISE, "tegra_enterprise")
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
@@ -1160,6 +1194,7 @@ MACHINE_START(TEGRA_ENTERPRISE, "tegra_enterprise")
 MACHINE_END
 #endif
 
+#if defined(CONFIG_MACH_TAI)
 MACHINE_START(TAI, "tai")
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
@@ -1170,3 +1205,4 @@ MACHINE_START(TAI, "tai")
 	.init_machine   = tegra_enterprise_init,
 	.dt_compat	= tai_dt_board_compat,
 MACHINE_END
+#endif

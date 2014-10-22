@@ -595,7 +595,7 @@ static struct i2c_board_info __initdata enterprise_regulators[] = {
 
 //added by wangyongqing start
 static struct regulator_consumer_supply tps623870_dcdc_supply[] = {
-#if (defined(CONFIG_BOARD_M470_V2) ||defined(CONFIG_BOARD_M470BSD_V2)||defined(CONFIG_BOARD_M470BSS_V2))
+#if defined(CONFIG_BOARD_M470_V2)
 	REGULATOR_SUPPLY("vdd_cpu", NULL),
 #endif	
 };

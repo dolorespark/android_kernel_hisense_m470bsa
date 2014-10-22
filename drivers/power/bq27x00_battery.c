@@ -111,7 +111,7 @@
 #define BATTERY_SDN_POWER_VOL	(3280*1000) //Shut down if battery voltage drop to 3.28V
 #define BATTERY_LOW_SHUTDOWN_LVL	3
 
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 extern unsigned int his_board_version;
 #endif
 
@@ -548,7 +548,7 @@ static void bq27x00_update(struct bq27x00_device_info *di)
 #if defined(CONFIG_CHARGER_TPS8003X)
 /*If unplug/re-plug soc will fixed to be 99 from 100,Now we'll take fuel gauge full flag for better UX  lc@0330*/
 		charging_status = fg_tps8003x_charging_status();
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 //KEEP ORIGIANAL FUEL GAUGE POLICY(ONLY ADD 100 DETECTION if CHARGERD with SOC above 95).
 		if(cache.capacity >= 95) {
 			if((charging_status == CHAEGING_DONE) && (cache.capacity != 100))
@@ -740,7 +740,7 @@ static int bq27x00_battery_status(struct bq27x00_device_info *di,
 #else
 		if(di->ac_online){
 #endif
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 /*If unplug/re-plug soc will fixed to be 99 from 100,Now we'll take fuel gauge full flag for better UX  lc@0330*/
 			if ((di->cache.flags & BQ27500_FLAG_FC) && (di->cache.capacity == 100)) {  //only show full stats when capacity is 100%
 				status = POWER_SUPPLY_STATUS_FULL;
@@ -1105,7 +1105,7 @@ static int bq27x00_powersupply_init(struct bq27x00_device_info *di)
 	di->bat.properties = bq27x00_battery_props;
 	di->bat.num_properties = ARRAY_SIZE(bq27x00_battery_props);
 	di->bat.get_property = bq27x00_battery_get_property;
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	di->bat.external_power_changed = bq27x00_external_power_changed;  //Update Flags status,We using fuel gauge full detection now
 #endif
 
@@ -1263,7 +1263,7 @@ static int bq27x00_battery_probe(struct i2c_client *client,
 	int num;
 	u16 read_data;
 	int retval = 0;
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	if(his_board_version == M470_REVISION_2A_TS_3V3
 		|| his_board_version == M470_REVISION_2BC_TS_3V3) {
 		gpio_direction_output(TEGRA_GPIO_TP_LP0, 1);
@@ -1433,7 +1433,7 @@ static int bq27x00_battery_suspend(struct device *dev)
 	else if (di->chip == BQ27541)
 	To-Do :Disable GEN2_I2C  LDO7 pull up volatge in S3 for better battery life
 	*/
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	if(his_board_version == M470_REVISION_2A_TS_3V3
 		|| his_board_version == M470_REVISION_2BC_TS_3V3) {
 		gpio_direction_output(TEGRA_GPIO_TP_LP0, 0);
@@ -1448,7 +1448,7 @@ static int bq27x00_battery_resume(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 	struct bq27x00_device_info *di = platform_get_drvdata(pdev);
 
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 	if(his_board_version == M470_REVISION_2A_TS_3V3
 		|| his_board_version == M470_REVISION_2BC_TS_3V3) {
 		gpio_direction_output(TEGRA_GPIO_TP_LP0, 1);

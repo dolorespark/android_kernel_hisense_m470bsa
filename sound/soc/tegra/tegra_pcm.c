@@ -442,7 +442,10 @@ static int tegra_pcm_probe(struct snd_soc_platform *platform)
 	if (machine_is_kai() ||
 	    machine_is_tegra_enterprise() ||
 	    machine_is_tai() ||
-	    machine_is_m470())
+	    machine_is_m470() ||
+	    machine_is_m470bsd() ||
+	    machine_is_m470bse() ||
+	    machine_is_m470bss())
 		platform->dapm.idle_bias_off = 1;
 
 	return 0;

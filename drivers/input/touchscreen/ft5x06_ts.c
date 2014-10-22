@@ -51,12 +51,12 @@
 #ifdef CONFIG_BATTERY_BQ27x00
 extern bool battery_standalone_fg(void);
 static bool already_in_suspend = false;
-#if (defined(CONFIG_MACH_M470)||defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BOARD_M470)
 extern unsigned int his_board_version;
 #endif
 #endif
 
-#if defined(CONFIG_BATTERY_BQ27x00) && (defined(CONFIG_MACH_M470) || defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BATTERY_BQ27x00) && defined(CONFIG_BOARD_M470)
 static bool gen2_i2c_3v3_in_use(void)
 {
 	bool in_use = false;
@@ -854,7 +854,7 @@ void ft5x0x_anti_interference_open(void)
      u8 devmode = 0x1;
   	 //gpio_direction_output(TEGRA_GPIO_TP_VDD_EN, 1);
   	 //mdelay(150);
-#if defined(CONFIG_BATTERY_BQ27x00) && (defined(CONFIG_MACH_M470) || defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BATTERY_BQ27x00) && defined(CONFIG_BOARD_M470)
 	if(gen2_i2c_3v3_in_use()) {
 		if((!already_in_suspend) && ft5x06_has_probe){
 			ft5x0x_write_reg(FT5X0X_REG_INTERFERENCE, devmode);
@@ -882,7 +882,7 @@ void ft5x0x_anti_interference_close(void)
 	u8 devmode = 0x0;
 	//gpio_direction_output(TEGRA_GPIO_TP_VDD_EN, 1);
   	//mdelay(150);
-#if defined(CONFIG_BATTERY_BQ27x00) && (defined(CONFIG_MACH_M470) || defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BATTERY_BQ27x00) && defined(CONFIG_BOARD_M470)
 	if(gen2_i2c_3v3_in_use()) {
 		if((!already_in_suspend) && ft5x06_has_probe){
 			ft5x0x_write_reg(FT5X0X_REG_INTERFERENCE, devmode);
@@ -1152,7 +1152,7 @@ static void ft5x0x_ts_suspend(struct early_suspend *handler)
 	free_irq(ft5x06_irq, ts);
 	cancel_work_sync(&ts->pen_event_work);
 	flush_workqueue(ts->ts_workqueue);
-#if defined(CONFIG_BATTERY_BQ27x00) && (defined(CONFIG_MACH_M470) || defined(CONFIG_MACH_M470BSD)||defined(CONFIG_MACH_M470BSS))
+#if defined(CONFIG_BATTERY_BQ27x00) && defined(CONFIG_BOARD_M470)
 	if(gen2_i2c_3v3_in_use())
 		printk("****KEEP GEN2_I2C PULL UP VOLTAGE\n");
 	else
