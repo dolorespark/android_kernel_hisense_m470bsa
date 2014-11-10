@@ -26,6 +26,10 @@ ifdef CONFIG_LOGIWII_FF
 	hid-logitech-y	+= hid-lg4ff.o
 endif
 
+hid-wiimote-y		:= hid-wiimote-core.o hid-wiimote-modules.o
+#ifdef CONFIG_DEBUG_FS
+#	hid-wiimote-y	+= hid-wiimote-debug.o
+#endif
 obj-$(CONFIG_HID_A4TECH)	+= hid-a4tech.o
 obj-$(CONFIG_HID_ACRUX)		+= hid-axff.o
 obj-$(CONFIG_HID_APPLE)		+= hid-apple.o
