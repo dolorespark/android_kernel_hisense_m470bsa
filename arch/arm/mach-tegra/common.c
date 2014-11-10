@@ -127,7 +127,11 @@ char his_bt_addr[18];
 unsigned int his_board_version; //added by wangyongqing
 unsigned int ddr3_det; //added by wangyongqing
 
-static int pmu_core_edp = 1200;	/* default 1.2V EDP limit */
+#ifdef CONFIG_TEGRA_GPU_OVERCLOCK
+static int pmu_core_edp = 1250;			/* extra juice to run at 520mhz */
+#else
+static int pmu_core_edp = 1200;			/* default 1.2V EDP limit */
+#endif
 static int board_panel_type;
 static enum power_supply_type pow_supply_type = POWER_SUPPLY_TYPE_MAINS;
 
