@@ -248,6 +248,12 @@ config MACH_M470BSE
 	   help
          Support for Hisense M470BSE development platform
 
+config MACH_M470BSG
+       bool "M470BSG variant"
+       depends on BOARD_M470
+	   help
+         Support for Hisense M470BSG development platform
+
 config MACH_M470BSS
        bool "M470BSS variant"
        depends on BOARD_M470

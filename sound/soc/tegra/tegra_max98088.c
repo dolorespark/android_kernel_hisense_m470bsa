@@ -313,6 +313,7 @@ static int tegra_max98088_hw_params(struct snd_pcm_substream *substream,
          machine_is_m470() ||
          machine_is_m470bsd() ||
          machine_is_m470bse() ||
+         machine_is_m470bsg() ||
          machine_is_m470bss())) {
 		clk_set_rate(machine->util_data.clk_cdev1, (256 * srate));
 		rate = clk_get_rate(machine->util_data.clk_cdev1);

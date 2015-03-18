@@ -1122,10 +1122,12 @@ static const char *tai_dt_board_compat[] = {
 #if defined(CONFIG_MACH_M470_EMULATION)
 	#define M470BSD_MACHINE_NAME	M470_MACHINE_NAME
 	#define M470BSE_MACHINE_NAME	M470_MACHINE_NAME
+	#define M470BSG_MACHINE_NAME	M470_MACHINE_NAME
 	#define M470BSS_MACHINE_NAME	M470_MACHINE_NAME
 #else
 	#define M470BSD_MACHINE_NAME	"m470bsd"
 	#define M470BSE_MACHINE_NAME	"m470bse"
+	#define M470BSG_MACHINE_NAME	"m470bsg"
 	#define M470BSS_MACHINE_NAME	"m470bss"
 #endif
 
@@ -1157,6 +1159,19 @@ MACHINE_END
 
 #if defined(CONFIG_MACH_M470BSE)
 MACHINE_START(M470BSE, M470BSE_MACHINE_NAME)
+	.boot_params    = 0x80000100,
+	.map_io         = tegra_map_common_io,
+	.reserve        = tegra_enterprise_reserve,
+	.init_early	= tegra_init_early,
+	.init_irq       = tegra_init_irq,
+	.timer          = &tegra_timer,
+	.init_machine   = tegra_enterprise_init,
+	.dt_compat	= enterprise_dt_board_compat,
+MACHINE_END
+#endif
+
+#if defined(CONFIG_MACH_M470BSG)
+MACHINE_START(M470BSG, M470BSG_MACHINE_NAME)
 	.boot_params    = 0x80000100,
 	.map_io         = tegra_map_common_io,
 	.reserve        = tegra_enterprise_reserve,
