@@ -42,6 +42,7 @@
 #define ENTERPRISE_SD_CD TEGRA_GPIO_PI5
 #define MAC_ADDR_LEN		6
 #define MAC_CMDLINE_LEN     17
+#define MAC_SYS_LEN         18
 #define MAC_BCK_LEN         12
 #define MAC_BCK_OFFSET      0x4A
 
@@ -55,6 +56,7 @@ static int enterprise_wifi_set_carddetect(int val);
 static int enterprise_wifi_get_mac_addr(unsigned char *buf);
 static int enterprise_wifi_validate_mac(unsigned char *buf);
 static int enterprise_wifi_read_mac_from_bck(void);
+static int enterprise_wifi_read_mac_from_sysfs(void);
 extern unsigned int his_hw_ver;
 extern unsigned int his_board_version;
 extern char his_wifi_addr[18];
@@ -298,33 +300,47 @@ static int enterprise_wifi_reset(int on)
 }
 
 /* DoPa (20140116) - if the wifi MAC address is missing from the
- * kernel's commandline, attempt to read it from the BCK partition;
- * if that fails, generate a random value.  In both cases, plug the
+ * kernel's commandline, attempt to read it from the BCK device
+ * driver; if unsuccessful, read it from the raw BCK partition;
+ * if both fail, generate a random value.  In all cases, plug the
  * value into the field that normally contains the cmdline argument.
  */
 static int enterprise_wifi_get_mac_addr(unsigned char *buf)
 {
+	char* msg = "commandline";
+
 	/* see if the existing value is valid */
 	if (enterprise_wifi_validate_mac(buf) != 0) {
 
-		/* if not, try to get it from the BCK partition */
-		if (enterprise_wifi_read_mac_from_bck() != 0 ||
+		/* if not, try to get it from the BCK device */
+		msg = "sysfs";
+		if (enterprise_wifi_read_mac_from_sysfs() != 0 ||
 			enterprise_wifi_validate_mac(buf) != 0) {
 
-			/* if all else fails, fake it */
-			uint rand_mac;
-			srandom32((uint)jiffies);
-			rand_mac = random32();
-			buf[0] = 0x00;
-			buf[1] = 0x34;
-			buf[2] = 0x9a;
-			buf[3] = (unsigned char)(rand_mac & 0x0F) | 0xF0;
-			buf[4] = (unsigned char)(rand_mac >> 8);
-			buf[5] = (unsigned char)(rand_mac >> 16);
-			snprintf(his_wifi_addr, sizeof(his_wifi_addr), "%02X:%02X:%02X:%02X:%02X:%02X",
-					 buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+			/* if not, try to get it from the BCK partition */
+			msg = "BCK partition";
+			if (enterprise_wifi_read_mac_from_bck() != 0 ||
+				enterprise_wifi_validate_mac(buf) != 0) {
+				uint rand_mac;
+
+				/* if all else fails, fake it */
+				msg = "random number";
+				srandom32((uint)jiffies);
+				rand_mac = random32();
+				buf[0] = 0x00;
+				buf[1] = 0x34;
+				buf[2] = 0x9a;
+				buf[3] = (unsigned char)(rand_mac & 0x0F) | 0xF0;
+				buf[4] = (unsigned char)(rand_mac >> 8);
+				buf[5] = (unsigned char)(rand_mac >> 16);
+				snprintf(his_wifi_addr, sizeof(his_wifi_addr), "%02X:%02X:%02X:%02X:%02X:%02X",
+						 buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
+			}
 		}
 	}
+
+	his_wifi_addr[sizeof(his_wifi_addr)-1] = 0;
+	pr_notice("%s: got %s from %s\n", __func__, his_wifi_addr, msg);
 
 	return 0;
 }
@@ -372,7 +388,7 @@ static int enterprise_wifi_validate_mac(unsigned char *buf)
 /* DoPa (20140116) */
 static int enterprise_wifi_read_mac_from_bck(void)
 {
-	int i, j, err;
+	int i, j, cnt;
 	struct file *f = NULL;
 	loff_t pos;
 	mm_segment_t fs;
@@ -389,11 +405,11 @@ static int enterprise_wifi_read_mac_from_bck(void)
 	pos = MAC_BCK_OFFSET;
 	fs = get_fs();
 	set_fs(get_ds());
-	err = vfs_read(f, readbuf, MAC_BCK_LEN, &pos);
+	cnt = vfs_read(f, readbuf, MAC_BCK_LEN, &pos);
 	set_fs(fs);
 	filp_close(f, NULL);
 
-	if (err < 0)
+	if (cnt != MAC_BCK_LEN)
 		return -1;
 
 	for (i = 0, j = 0; i < MAC_BCK_LEN; i++, j++) {
@@ -402,6 +418,35 @@ static int enterprise_wifi_read_mac_from_bck(void)
 		his_wifi_addr[j] = readbuf[i];
 	}
 	his_wifi_addr[j] = 0;
+
+	return 0;
+}
+
+/* DoPa (20150320) */
+static int enterprise_wifi_read_mac_from_sysfs(void)
+{
+	int cnt;
+	struct file *f = NULL;
+	loff_t pos;
+	mm_segment_t fs;
+	char readbuf[MAC_SYS_LEN];
+
+	f = filp_open("/sys/devices/platform/bck/wifi_addr", O_RDONLY, 0);
+	if (IS_ERR(f))
+		return -1;
+
+	pos = 0;
+	fs = get_fs();
+	set_fs(get_ds());
+	cnt = vfs_read(f, readbuf, MAC_SYS_LEN, &pos);
+	set_fs(fs);
+	filp_close(f, NULL);
+
+	if (cnt != MAC_SYS_LEN)
+		return -1;
+
+	readbuf[MAC_SYS_LEN-1] = 0;
+	memcpy(his_wifi_addr, readbuf, sizeof(his_wifi_addr));
 
 	return 0;
 }
