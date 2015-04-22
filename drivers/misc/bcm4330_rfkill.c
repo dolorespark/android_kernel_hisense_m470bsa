@@ -78,16 +78,18 @@ static int bcm4330_bt_rfkill_set_power(void *data, bool blocked)
 		printk("bcm 4330 power on!\n");
 		if (bcm4330_rfkill->bt_32k_clk)
 			clk_enable(bcm4330_rfkill->bt_32k_clk);
-		if (bcm4330_rfkill->gpio_shutdown)
+		if (bcm4330_rfkill->gpio_shutdown) {
 			gpio_direction_output(bcm4330_rfkill->gpio_shutdown, 0);
 			msleep(100);
 			gpio_direction_output(bcm4330_rfkill->gpio_shutdown, 1);
 			msleep(100);
-		if (bcm4330_rfkill->gpio_reset)
+		}
+		if (bcm4330_rfkill->gpio_reset) {
 			gpio_direction_output(bcm4330_rfkill->gpio_reset, 0);
 			msleep(100);
 			gpio_direction_output(bcm4330_rfkill->gpio_reset, 1);
 			msleep(100);
+		}
 	}
 
 	if (sd_dpd) {
