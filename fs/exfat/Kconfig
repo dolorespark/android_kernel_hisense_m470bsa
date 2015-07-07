@@ -17,7 +17,7 @@ config EXFAT_DELAYED_SYNC
 config EXFAT_KERNEL_DEBUG
 	bool "enable kernel debug features via ioctl"
 	depends on EXFAT_FS
-	default n
+	default y
 
 config EXFAT_DEBUG_MSG
 	bool "print debug messages"
