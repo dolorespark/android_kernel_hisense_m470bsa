@@ -49,6 +49,8 @@ static struct bcm4330_rfkill_data *bcm4330_rfkill;
 
 static int bcm4330_bt_rfkill_set_power(void *data, bool blocked)
 {
+	struct tegra_io_dpd *sd_dpd;
+
 	/*
 	 * check if BT gpio_shutdown line status and current request are same.
 	 * If same, then return, else perform requested operation.
@@ -56,8 +58,6 @@ static int bcm4330_bt_rfkill_set_power(void *data, bool blocked)
 	if (gpio_get_value(bcm4330_rfkill->gpio_shutdown) && !blocked)
 		return 0;
 
-	struct tegra_io_dpd *sd_dpd;
-	
 	sd_dpd = tegra_io_dpd_get_sdhci();
 	
 	if (sd_dpd) {

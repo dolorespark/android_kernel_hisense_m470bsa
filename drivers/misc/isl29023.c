@@ -88,7 +88,8 @@ static int isl_set_range(struct i2c_client *client, int range)
 		return ret_val;
 	return range;
 }
-static int isl_get_range(struct i2c_client *client)
+
+__attribute__ ((unused)) static int isl_get_range(struct i2c_client *client)
 {
 	int ret_val,range=0;
 
@@ -518,7 +519,11 @@ static int isl_set_default_config(struct i2c_client *client)
 }
 
 /* Return 0 if detection is successful, -ENODEV otherwise */
-static int isl29023_detect(struct i2c_client *client, int kind,
+
+/* Note: the signature defined for this function doesn't include 'kind',
+ * so it would likely blow up if called - however, it isn't
+ */
+__attribute__ ((unused)) static int isl29023_detect(struct i2c_client *client, int kind,
                           struct i2c_board_info *info)
 {
         struct i2c_adapter *adapter = client->adapter;
@@ -643,7 +648,10 @@ static struct i2c_driver isl29023_driver = {
 	.remove = isl29023_remove,
 	.shutdown = isl29023_shutdown,
 	.id_table = isl29023_id,
+/* isl29023_detect has an incorrect signature but isn't needed,
+ * so disable the call
 	.detect         = isl29023_detect,
+ */
 	//.address_data   = &addr_data,
 };
 

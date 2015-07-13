@@ -31,7 +31,7 @@
 
 #include "../staging/android/timed_output.h"
 
-static struct vibrator_data {
+struct vibrator_data {
 	struct timed_output_dev dev;
 	struct hrtimer timer;
 	struct regulator *regulator;
@@ -70,7 +70,7 @@ static void vibrator_stop(void)
 	mutex_unlock(&vibra_mutex);
 }
 
-static void vibrator_work_func(unsigned long data)
+static void vibrator_work_func(struct work_struct *work)
 {
 	vibrator_stop();
 }
@@ -115,7 +115,7 @@ static struct timed_output_dev vibrator_dev = {
 	.enable		= vibrator_enable,
 };
 
-static int vibrator_probe(void)
+static int vibrator_probe(struct platform_device *dev)
 {
 	int ret;
 	data = kzalloc(sizeof(struct vibrator_data), GFP_KERNEL);
@@ -149,7 +149,7 @@ err:
 	return ret;
 }
 
-static int vibrator_remove(void)
+static int vibrator_remove(struct platform_device *dev)
 {
 	timed_output_dev_unregister(&data->dev);
 	regulator_put(data->regulator);
