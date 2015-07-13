@@ -330,7 +330,10 @@ static int __init tegra_latency_allowance_debugfs_init(void)
 
 late_initcall(tegra_latency_allowance_debugfs_init);
 
-static int __init tegra_latency_allowance_init(void)
+/* DoPa (2015/05/22) - bug fix: at the standard optimization level,
+ * the 'for' loop below will be optimized out of existence by gcc 4.8
+ */
+static __attribute__ ((optimize(1))) int __init tegra_latency_allowance_init(void)
 {
 	unsigned int i;
 

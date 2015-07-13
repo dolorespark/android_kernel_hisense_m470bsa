@@ -58,9 +58,11 @@ void *return_address(unsigned int level)
 
 #else /* if defined(CONFIG_FRAME_POINTER) && !defined(CONFIG_ARM_UNWIND) */
 
+/* this isn't going to get fixed, so skip the nag
 #if defined(CONFIG_ARM_UNWIND)
 #warning "TODO: return_address should use unwind tables"
 #endif
+*/
 
 void *return_address(unsigned int level)
 {
