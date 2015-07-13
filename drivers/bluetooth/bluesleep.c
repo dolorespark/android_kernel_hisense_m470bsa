@@ -55,6 +55,9 @@
 
 #define BT_SLEEP_DBG
 #ifdef BT_SLEEP_DBG
+#ifdef BT_DBG
+#undef BT_DBG
+#endif
 #define BT_DBG(fmt, arg...) printk(KERN_ERR "%s: " fmt "\n" , __func__ , ## arg)
 #endif
 /*

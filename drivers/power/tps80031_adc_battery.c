@@ -576,7 +576,7 @@ int battery_temp_by_adc(void)
 EXPORT_SYMBOL_GPL(battery_temp_by_adc);
 
 //Battery Charging current
-static int tps80031_battery_current_now(struct tps80031_device_info *di)
+__attribute__ ((unused)) static int tps80031_battery_current_now(struct tps80031_device_info *di)
 {
 	int charge;
 	if(di->ac_online == 1 || di->usb_online  == 1) {

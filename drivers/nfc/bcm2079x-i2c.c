@@ -469,9 +469,9 @@ err_misc_register:
 	kfree(bcm2079x_dev);
 err_exit:
 	gpio_free(platform_data->wake_gpio);
-err_firm:
+/*err_firm:*/
 	gpio_free(platform_data->en_gpio);
-err_en:
+/*err_en:*/
 	gpio_free(platform_data->irq_gpio);
 	return ret;
 }

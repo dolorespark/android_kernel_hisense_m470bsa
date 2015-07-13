@@ -1849,7 +1849,6 @@ static void sdhci_enable_preset_value(struct mmc_host *mmc, bool enable)
 int sdhci_enable(struct mmc_host *mmc)
 {
 	struct sdhci_host *host = mmc_priv(mmc);
-	u16 clk;
 
 	if (!mmc->card || mmc->card->type == MMC_TYPE_SDIO)
 		return 0;
@@ -1866,7 +1865,6 @@ int sdhci_enable(struct mmc_host *mmc)
 int sdhci_disable(struct mmc_host *mmc, int lazy)
 {
 	struct sdhci_host *host = mmc_priv(mmc);
-	u16 clk;
 
 	if (!mmc->card || mmc->card->type == MMC_TYPE_SDIO)
 		return 0;

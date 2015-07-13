@@ -350,6 +350,7 @@ static irqreturn_t tps80031_rtc_irq(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+#if defined(CONFIG_RTC_ALARM_POWEROFF_SUPPORT)
 //wangyongqing added start
 static int tps80031_rtc_read_regs(struct device *dev, int sid, int reg, int len,
     uint8_t *val)
@@ -389,7 +390,6 @@ static int tps80031_rtc_write_regs(struct device *dev, int sid, int reg, int len
     return 0;
 }
 
-#if defined(CONFIG_RTC_ALARM_POWEROFF_SUPPORT)
 int tps80031_clear_alarm(void)
 {
         struct tm tm;
