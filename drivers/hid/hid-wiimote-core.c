@@ -1829,7 +1829,7 @@ static int wiimote_hid_probe(struct hid_device *hdev,
 
 	return 0;
 
-err_free:
+/*err_free:*/
 	wiimote_destroy(wdata);
 	return ret;
 
