@@ -116,11 +116,11 @@ static int aic325x_codec_write(struct snd_soc_codec *codec, unsigned int reg,
 			unsigned int value);
 
 static int __new_control_info(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_info *uinfo);
+				struct snd_ctl_elem_info *uinfo) __attribute__ ((unused));
 static int __new_control_get(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol);
+				struct snd_ctl_elem_value *ucontrol) __attribute__ ((unused));
 static int __new_control_put(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol);
+				struct snd_ctl_elem_value *ucontrol) __attribute__ ((unused));
 static int aic325x_hp_event(struct snd_soc_dapm_widget *w,
 				struct snd_kcontrol *kcontrol, int event);
 //static int aic325x_change_page(struct snd_soc_codec *codec, u8 new_page);
@@ -1165,10 +1165,6 @@ void aic3256_firmware_load(const struct firmware *fw, void *context)
 #define AIC3256_HPL_POWER_MASK	0x20
 #define AIC3256_HPR_POWER_MASK	0x10
 
-#define AIC3256_HPL_POWER_STATUS_MASK	0x20
-#define AIC3256_HPR_POWER_STATUS_MASK	0x02
-
-
 static int aic325x_hp_event(struct snd_soc_dapm_widget *w,
 				struct snd_kcontrol *kcontrol, int event)
 {
@@ -1187,8 +1183,6 @@ static int aic325x_hp_event(struct snd_soc_dapm_widget *w,
 		return 0;
 return 0;
 #else
-	u8 value;
-	int counter;
 	struct snd_soc_codec *codec = w->codec;
 	int hp_select;
 	int ret_wbits = 0;
@@ -1290,6 +1284,7 @@ return 0;
 #endif
 
 }
+
 /*
  *----------------------------------------------------------------------------
  * Function : __new_control_info
@@ -2333,7 +2328,7 @@ static void aic3256_reschedule_work(struct snd_soc_codec *codec,
 static void aic3256_keydown_handler(struct work_struct *work){
 	struct snd_soc_codec *codec = container_of(work, struct snd_soc_codec, keydown_work.work);
 	struct aic325x_priv *aic3256 = snd_soc_codec_get_drvdata(codec);
-	unsigned int value;
+
 	printk("aic3256_keydown_handler:\n");
 	wake_lock_timeout(&aic3256->aic325x_wake_lock, HZ*1);
 	if(his_hpdet){
@@ -2357,7 +2352,7 @@ static void aic3256_keydown_handler(struct work_struct *work){
 static void aic3256_keyup_handler(struct work_struct *work){
 	struct snd_soc_codec *codec = container_of(work, struct snd_soc_codec, keyup_work.work);
 	struct aic325x_priv *aic3256 = snd_soc_codec_get_drvdata(codec);
-	unsigned int value;
+
 	wake_lock_timeout(&aic3256->aic325x_wake_lock, HZ/10);
 	if(his_hpdet){
 		if(HeadsetIN == false)

@@ -144,7 +144,6 @@ config SND_SOC_TEGRA_MAX98088
 	  Enterprise.
 
 config MACH_HAS_SND_SOC_TEGRA_TLV320AIC325X
-	bool
 	tristate "SoC Audio support for Tegra boards using 325x"
 	help
 	  Machines that use the SND_SOC_TEGRA_TLV320AIC325X driver should select
