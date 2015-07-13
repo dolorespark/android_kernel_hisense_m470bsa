@@ -385,7 +385,7 @@ static int lightsensor_enable(struct cm3217_info *lpi)
 		pr_err("[LS][CM3217 error]%s: set auto light sensor fail\n",
 		       __func__);
 
-	queue_work(lpi->lp_wq, &report_work);
+	queue_work(lpi->lp_wq, &report_work.work);
 	lpi->als_enable = 1;
 
 	mutex_unlock(&als_enable_mutex);

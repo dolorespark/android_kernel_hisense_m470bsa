@@ -206,7 +206,7 @@ int ft5x0x_i2c_Write(struct i2c_client *client, char *writebuf, int writelen)
 	return ret;
 }
 
-static int ft5x0x_i2c_rxdata(char *rxdata, int length)
+__attribute__ ((unused)) static int ft5x0x_i2c_rxdata(char *rxdata, int length)
 {
 	int ret;
 
@@ -1432,7 +1432,7 @@ static ssize_t ft5x0x_tprwreg_store(struct device *dev,
 	struct i2c_client *client;
 	ssize_t num_read_chars = 0;
 	int retval;
-	u16 wmreg=0;
+	long unsigned int wmreg=0;
 	u8 regaddr=0xff,regvalue=0xff;
 	u8 valbuf[5];
 
@@ -1464,7 +1464,7 @@ static ssize_t ft5x0x_tprwreg_store(struct device *dev,
 	if(2 == num_read_chars)
 	{
 		//read register
-		regaddr = wmreg;
+		regaddr = (u8)wmreg;
 		if(ft5x0x_read_reg(regaddr, &regvalue) < 0)
 			pr_err("Could not read the register(0x%02x)\n", regaddr);
 		else
@@ -1473,7 +1473,7 @@ static ssize_t ft5x0x_tprwreg_store(struct device *dev,
 	else
 	{
 		regaddr = wmreg>>8;
-		regvalue = wmreg;
+		regvalue = (u8)wmreg;
 		if(ft5x0x_write_reg(regaddr, regvalue)<0)
 			pr_err("Could not write the register(0x%02x)\n", regaddr);
 		else

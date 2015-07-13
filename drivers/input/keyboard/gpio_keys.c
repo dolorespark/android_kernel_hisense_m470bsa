@@ -391,12 +391,14 @@ static void gpio_keys_gpio_timer(unsigned long _data)
 	schedule_work(&bdata->work);
 }
 
+/* in arch/arm/mach-tegra/pm.c */
+extern unsigned int get_suspend_mode(void);
+
 static irqreturn_t gpio_keys_gpio_isr(int irq, void *dev_id)
 {
 	struct gpio_button_data *bdata = dev_id;
 
 	BUG_ON(irq != bdata->irq);
-    extern unsigned int get_suspend_mode();
 	current_suspend_mode =get_suspend_mode();
 	printk(KERN_INFO "%s(): current_suspend_mode=%d, gpio=%d\n", __func__, current_suspend_mode, bdata->button->gpio);
     if(gpio_key_suspend && current_suspend_mode == TEGRA_SUSPEND_LP0 )
