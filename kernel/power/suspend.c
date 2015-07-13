@@ -276,7 +276,6 @@ static void suspend_finish(void)
  */
 int enter_state(suspend_state_t state)
 {
-	unsigned int temp;
 	extern void clear_pmc_wake_status(void);
 	int error;
 
