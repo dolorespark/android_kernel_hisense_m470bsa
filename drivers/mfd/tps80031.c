@@ -738,7 +738,6 @@ static bool can_gauge_close_suspend(void)
 int tps80031_close_gpadc(void)
 {
     int ret = 0;
-    int len = 0;
     int reg = 0x90; //TOGGLE1
     uint8_t mask = 0xFF;
     uint8_t val = 0;
