@@ -2081,10 +2081,6 @@ enum {
 	Opt_err_panic,
 	Opt_err_ro,
 	Opt_utf8_hack,
-	Opt_shortname_lower,
-	Opt_shortname_win95,
-	Opt_shortname_winnt,
-	Opt_shortname_mixed,
 	Opt_err,
 #ifdef CONFIG_EXFAT_DISCARD
 	Opt_discard,
@@ -2106,10 +2102,6 @@ static const match_table_t exfat_tokens = {
 	{Opt_err_panic, "errors=panic"},
 	{Opt_err_ro, "errors=remount-ro"},
 	{Opt_utf8_hack, "utf8"},
-	{Opt_shortname_lower, "shortname=lower"},
-	{Opt_shortname_win95, "shortname=win95"},
-	{Opt_shortname_winnt, "shortname=winnt"},
-	{Opt_shortname_mixed, "shortname=mixed"},
 #ifdef CONFIG_EXFAT_DISCARD
 	{Opt_discard, "discard"},
 #endif /* CONFIG_EXFAT_DISCARD */
@@ -2215,14 +2207,7 @@ static int parse_options(char *options, int silent, int *debug,
 			opts->discard = 1;
 			break;
 #endif /* CONFIG_EXFAT_DISCARD */
-		/* accept but ignore the 'shortname=' options for
-		 * compatibility with the standard FAT module code
-		 */
 		case Opt_utf8_hack:
-		case Opt_shortname_lower:
-		case Opt_shortname_win95:
-		case Opt_shortname_winnt:
-		case Opt_shortname_mixed:
 			break;
 		default:
 			if (!silent)
@@ -2487,18 +2472,6 @@ static struct file_system_type exfat_fs_type = {
 	.fs_flags    = FS_REQUIRES_DEV,
 };
 
-static struct file_system_type vfat_fs_type = {
-	.owner       = THIS_MODULE,
-	.name        = "vfat",
-	.mount       = exfat_fs_mount,
-#ifdef CONFIG_EXFAT_KERNEL_DEBUG
-	.kill_sb    = exfat_debug_kill_sb,
-#else
-	.kill_sb    = kill_block_super,
-#endif /* CONFIG_EXFAT_KERNEL_DEBUG */
-	.fs_flags    = FS_REQUIRES_DEV,
-};
-
 static int __init init_exfat(void)
 {
 	int err;
@@ -2517,15 +2490,9 @@ static int __init init_exfat(void)
 	if (err)
 		goto out;
 
-	err = register_filesystem(&vfat_fs_type);
+	err = register_filesystem(&exfat_fs_type);
 	if (err)
 		goto out;
-
-	err = register_filesystem(&exfat_fs_type);
-	if (err) {
-		unregister_filesystem(&vfat_fs_type);
-		goto out;
-	}
 
 	return 0;
 out:
