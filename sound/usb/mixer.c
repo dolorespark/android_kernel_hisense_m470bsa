@@ -1419,7 +1419,7 @@ static int parse_audio_mixer_unit(struct mixer_build *state, int unitid, void *r
 static int mixer_ctl_procunit_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
 	struct usb_mixer_elem_info *cval = kcontrol->private_data;
-	int err, val;
+	int err, uninitialized_var(val);
 
 	err = get_cur_ctl_value(cval, cval->control << 8, &val);
 	if (err < 0 && cval->mixer->ignore_ctl_error) {
@@ -1437,7 +1437,7 @@ static int mixer_ctl_procunit_get(struct snd_kcontrol *kcontrol, struct snd_ctl_
 static int mixer_ctl_procunit_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
 	struct usb_mixer_elem_info *cval = kcontrol->private_data;
-	int val, oval, err;
+	int val, err, uninitialized_var(oval);
 
 	err = get_cur_ctl_value(cval, cval->control << 8, &oval);
 	if (err < 0) {
@@ -1700,7 +1700,7 @@ static int mixer_ctl_selector_info(struct snd_kcontrol *kcontrol, struct snd_ctl
 static int mixer_ctl_selector_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
 	struct usb_mixer_elem_info *cval = kcontrol->private_data;
-	int val, err;
+	int err, uninitialized_var(val);
 
 	err = get_cur_ctl_value(cval, cval->control << 8, &val);
 	if (err < 0) {
@@ -1719,7 +1719,7 @@ static int mixer_ctl_selector_get(struct snd_kcontrol *kcontrol, struct snd_ctl_
 static int mixer_ctl_selector_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
 	struct usb_mixer_elem_info *cval = kcontrol->private_data;
-	int val, oval, err;
+	int val, err, uninitialized_var(oval);
 
 	err = get_cur_ctl_value(cval, cval->control << 8, &oval);
 	if (err < 0) {

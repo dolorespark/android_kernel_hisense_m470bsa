@@ -2170,7 +2170,7 @@ static int hub_port_reset(struct usb_hub *hub, int port1,
 static int hub_port_warm_reset(struct usb_hub *hub, int port)
 {
 	int ret;
-	u16 portstatus, portchange;
+	u16 uninitialized_var(portstatus), uninitialized_var(portchange);
 
 	if (!hub_is_superspeed(hub->hdev)) {
 		dev_err(hub->intfdev, "only USB3 hub support warm reset\n");
@@ -2508,7 +2508,7 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
 	struct usb_hub	*hub = hdev_to_hub(udev->parent);
 	int		port1 = udev->portnum;
 	int		status;
-	u16		portchange, portstatus;
+	u16		uninitialized_var(portchange), uninitialized_var(portstatus);
 
 	/* Skip the initial Clear-Suspend step for a remote wakeup */
 	status = hub_port_status(hub, port1, &portstatus, &portchange);

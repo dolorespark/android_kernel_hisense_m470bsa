@@ -327,7 +327,7 @@ static void t20_debug_show_channel_fifo(struct nvhost_master *m,
 {
 	u32 val, rd_ptr, wr_ptr, start, end;
 	struct nvhost_channel *channel = ch;
-	int state, count;
+	int state, uninitialized_var(count);
 
 	nvhost_debug_output(o, "%d: fifo:\n", chid);
 

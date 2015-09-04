@@ -585,12 +585,12 @@ out:
 
 static void xc_debug_dump(struct xc5000_priv *priv)
 {
-	u16 adc_envelope;
+	u16 uninitialized_var(adc_envelope);
 	u32 freq_error_hz = 0;
-	u16 lock_status;
+	u16 uninitialized_var(lock_status);
 	u32 hsync_freq_hz = 0;
-	u16 frame_lines;
-	u16 quality;
+	u16 uninitialized_var(frame_lines);
+	u16 uninitialized_var(quality);
 	u8 hw_majorversion = 0, hw_minorversion = 0;
 	u8 fw_majorversion = 0, fw_minorversion = 0;
 	u16 fw_buildversion = 0;

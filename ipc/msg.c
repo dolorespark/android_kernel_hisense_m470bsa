@@ -412,9 +412,12 @@ static int msgctl_down(struct ipc_namespace *ns, int msqid, int cmd,
 		       struct msqid_ds __user *buf, int version)
 {
 	struct kern_ipc_perm *ipcp;
-	struct msqid64_ds uninitialized_var(msqid64);
+	struct msqid64_ds msqid64;
 	struct msg_queue *msq;
 	int err;
+
+	/* suppress maybe-uninitialized warning */
+	msqid64.msg_qbytes = 0;
 
 	if (cmd == IPC_SET) {
 		if (copy_msqid_from_user(&msqid64, buf, version))
