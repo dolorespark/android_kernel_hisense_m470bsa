@@ -43,7 +43,7 @@
 #define USB_CHARGING_CDP_CURRENT_LIMIT_UA 1500000u	  //for BC 1.2
 #define USB_CHARGING_SDP_CURRENT_LIMIT_UA 500000u
 #define USB_CHARGING_NON_STANDARD_CHARGER_CURRENT_LIMIT_UA 500000u //safe purpose
-#define USB_CHARGING_OTG_CURRENT_LIMIT_UA 500000u
+#define USB_CHARGING_OTG_CURRENT_LIMIT_UA 900000u
 
  /* 5 sec wait time for charger detection after vbus is detected */
 #define USB_CHARGER_DETECTION_WAIT_TIME_MS 5000   //for half-plug user case
