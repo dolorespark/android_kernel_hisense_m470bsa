@@ -133,12 +133,6 @@ struct pid_entry {
 		NULL, &proc_single_file_operations,	\
 		{ .proc_show = show } )
 
-/* ANDROID is for special files in /proc. */
-#define ANDROID(NAME, MODE, OTYPE)			\
-	NOD(NAME, (S_IFREG|(MODE)),			\
-		&proc_##OTYPE##_inode_operations,	\
-		&proc_##OTYPE##_operations, {})
-
 /*
  * Count the number of hardlinks for the pid_entry table, excluding the .
  * and .. links.
@@ -269,8 +263,7 @@ struct mm_struct *mm_for_maps(struct task_struct *task)
 
 	mm = get_task_mm(task);
 	if (mm && mm != current->mm &&
-			!ptrace_may_access(task, PTRACE_MODE_READ) &&
-			!capable(CAP_SYS_RESOURCE)) {
+			!ptrace_may_access(task, PTRACE_MODE_READ)) {
 		mmput(mm);
 		mm = ERR_PTR(-EACCES);
 	}
@@ -638,120 +631,6 @@ static const struct inode_operations proc_def_inode_operations = {
 	.setattr	= proc_setattr,
 };
 
-static int mounts_open_common(struct inode *inode, struct file *file,
-			      const struct seq_operations *op)
-{
-	struct task_struct *task = get_proc_task(inode);
-	struct nsproxy *nsp;
-	struct mnt_namespace *ns = NULL;
-	struct path root;
-	struct proc_mounts *p;
-	int ret = -EINVAL;
-
-	if (task) {
-		rcu_read_lock();
-		nsp = task_nsproxy(task);
-		if (nsp) {
-			ns = nsp->mnt_ns;
-			if (ns)
-				get_mnt_ns(ns);
-		}
-		rcu_read_unlock();
-		if (ns && get_task_root(task, &root) == 0)
-			ret = 0;
-		put_task_struct(task);
-	}
-
-	if (!ns)
-		goto err;
-	if (ret)
-		goto err_put_ns;
-
-	ret = -ENOMEM;
-	p = kmalloc(sizeof(struct proc_mounts), GFP_KERNEL);
-	if (!p)
-		goto err_put_path;
-
-	file->private_data = &p->m;
-	ret = seq_open(file, op);
-	if (ret)
-		goto err_free;
-
-	p->m.private = p;
-	p->ns = ns;
-	p->root = root;
-	p->m.poll_event = ns->event;
-
-	return 0;
-
- err_free:
-	kfree(p);
- err_put_path:
-	path_put(&root);
- err_put_ns:
-	put_mnt_ns(ns);
- err:
-	return ret;
-}
-
-static int mounts_release(struct inode *inode, struct file *file)
-{
-	struct proc_mounts *p = file->private_data;
-	path_put(&p->root);
-	put_mnt_ns(p->ns);
-	return seq_release(inode, file);
-}
-
-static unsigned mounts_poll(struct file *file, poll_table *wait)
-{
-	struct proc_mounts *p = file->private_data;
-	unsigned res = POLLIN | POLLRDNORM;
-
-	poll_wait(file, &p->ns->poll, wait);
-	if (mnt_had_events(p))
-		res |= POLLERR | POLLPRI;
-
-	return res;
-}
-
-static int mounts_open(struct inode *inode, struct file *file)
-{
-	return mounts_open_common(inode, file, &mounts_op);
-}
-
-static const struct file_operations proc_mounts_operations = {
-	.open		= mounts_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= mounts_release,
-	.poll		= mounts_poll,
-};
-
-static int mountinfo_open(struct inode *inode, struct file *file)
-{
-	return mounts_open_common(inode, file, &mountinfo_op);
-}
-
-static const struct file_operations proc_mountinfo_operations = {
-	.open		= mountinfo_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= mounts_release,
-	.poll		= mounts_poll,
-};
-
-static int mountstats_open(struct inode *inode, struct file *file)
-{
-	return mounts_open_common(inode, file, &mountstats_op);
-}
-
-static const struct file_operations proc_mountstats_operations = {
-	.open		= mountstats_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= mounts_release,
-};
-
 #define PROC_BLOCK_SIZE	(3*1024)		/* 4K page size but our output routines use some slack for overruns */
 
 static ssize_t proc_info_read(struct file * file, char __user * buf,
@@ -891,10 +770,6 @@ out_no_task:
 	return ret;
 }
 
-#define mem_write NULL
-
-#ifndef mem_write
-/* This is a security hazard */
 static ssize_t mem_write(struct file * file, const char __user *buf,
 			 size_t count, loff_t *ppos)
 {
@@ -953,7 +828,6 @@ out_task:
 out_no_task:
 	return copied;
 }
-#endif
 
 loff_t mem_lseek(struct file *file, loff_t offset, int orig)
 {
@@ -1119,13 +993,6 @@ static ssize_t oom_adjust_write(struct file *file, const char __user *buf,
 		goto err_sighand;
 	}
 
-	if (oom_adjust != task->signal->oom_adj) {
-		if (oom_adjust == OOM_DISABLE)
-			atomic_inc(&task->mm->oom_disable_count);
-		if (task->signal->oom_adj == OOM_DISABLE)
-			atomic_dec(&task->mm->oom_disable_count);
-	}
-
 	/*
 	 * Warn that /proc/pid/oom_adj is deprecated, see
 	 * Documentation/feature-removal-schedule.txt.
@@ -1151,38 +1018,6 @@ err_task_lock:
 out:
 	return err < 0 ? err : count;
 }
-
-static int oom_adjust_permission(struct inode *inode, int mask)
-{
-	uid_t uid;
-	struct task_struct *p;
-
-	if (mask & MAY_NOT_BLOCK)
-		return -ECHILD;
-
-	p = get_proc_task(inode);
-	if(p) {
-		uid = task_uid(p);
-		put_task_struct(p);
-	}
-
-	/*
-	 * System Server (uid == 1000) is granted access to oom_adj of all 
-	 * android applications (uid > 10000) as and services (uid >= 1000)
-	 */
-	if (p && (current_fsuid() == 1000) && (uid >= 1000)) {
-		if (inode->i_mode >> 6 & mask) {
-			return 0;
-		}
-	}
-
-	/* Fall back to default. */
-	return generic_permission(inode, mask);
-}
-
-static const struct inode_operations proc_oom_adjust_inode_operations = {
-	.permission	= oom_adjust_permission,
-};
 
 static const struct file_operations proc_oom_adjust_operations = {
 	.read		= oom_adjust_read,
@@ -1259,12 +1094,6 @@ static ssize_t oom_score_adj_write(struct file *file, const char __user *buf,
 		goto err_sighand;
 	}
 
-	if (oom_score_adj != task->signal->oom_score_adj) {
-		if (oom_score_adj == OOM_SCORE_ADJ_MIN)
-			atomic_inc(&task->mm->oom_disable_count);
-		if (task->signal->oom_score_adj == OOM_SCORE_ADJ_MIN)
-			atomic_dec(&task->mm->oom_disable_count);
-	}
 	task->signal->oom_score_adj = oom_score_adj;
 	if (has_capability_noaudit(current, CAP_SYS_RESOURCE))
 		task->signal->oom_score_adj_min = oom_score_adj;
@@ -2890,7 +2719,7 @@ static const struct pid_entry tgid_base_stuff[] = {
 	REG("cgroup",  S_IRUGO, proc_cgroup_operations),
 #endif
 	INF("oom_score",  S_IRUGO, proc_oom_score),
-	ANDROID("oom_adj",S_IRUGO|S_IWUSR, oom_adjust),
+	REG("oom_adj",    S_IRUGO|S_IWUSR, proc_oom_adjust_operations),
 	REG("oom_score_adj", S_IRUGO|S_IWUSR, proc_oom_score_adj_operations),
 #ifdef CONFIG_AUDITSYSCALL
 	REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),

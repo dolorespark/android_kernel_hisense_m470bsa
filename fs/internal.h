@@ -15,6 +15,7 @@ struct super_block;
 struct file_system_type;
 struct linux_binprm;
 struct path;
+struct mount;
 
 /*
  * block_dev.c
@@ -46,7 +47,6 @@ extern void __init chrdev_init(void);
 extern int copy_mount_options(const void __user *, unsigned long *);
 extern int copy_mount_string(const void __user *, char **);
 
-extern struct vfsmount *__lookup_mnt(struct vfsmount *, struct dentry *, int);
 extern struct vfsmount *lookup_mnt(struct path *);
 extern int finish_automount(struct vfsmount *, struct path *);
 
@@ -78,6 +78,7 @@ extern int do_remount_sb(struct super_block *, int, void *, int);
 extern bool grab_super_passive(struct super_block *sb);
 extern struct dentry *mount_fs(struct file_system_type *,
 			       int, const char *, void *);
+extern struct super_block *user_get_super(dev_t);
 
 /*
  * open.c
