@@ -650,11 +650,8 @@ const struct file_operations exfat_dir_operations = {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,00)
 static int exfat_create(struct inode *dir, struct dentry *dentry, umode_t mode,
 						bool excl)
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
-static int exfat_create(struct inode *dir, struct dentry *dentry, umode_t mode,
-						struct nameidata *nd)
 #else
-static int exfat_create(struct inode *dir, struct dentry *dentry, int mode,
+static int exfat_create(struct inode *dir, struct dentry *dentry, umode_t mode,
 						struct nameidata *nd)
 #endif
 {
@@ -931,11 +928,7 @@ out:
 	return err;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
 static int exfat_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
-#else
-static int exfat_mkdir(struct inode *dir, struct dentry *dentry, int mode)
-#endif
 {
 	struct super_block *sb = dir->i_sb;
 	struct inode *inode;
@@ -1763,11 +1756,7 @@ static int exfat_fill_inode(struct inode *inode, FILE_ID_T *fid)
 
 		i_size_write(inode, info.Size);
 		EXFAT_I(inode)->mmu_private = i_size_read(inode);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,00)
 		set_nlink(inode, info.NumSubdirs);
-#else
-		inode->i_nlink = info.NumSubdirs;
-#endif
 	} else if (info.Attr & ATTR_SYMLINK) { /* symbolic link */
 		inode->i_generation |= 1;
 		inode->i_mode = exfat_make_mode(sbi, info.Attr, S_IRWXUGO);
@@ -1999,15 +1988,9 @@ static int exfat_remount(struct super_block *sb, int *flags, char *data)
 	return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
 static int exfat_show_options(struct seq_file *m, struct dentry *root)
 {
 	struct exfat_sb_info *sbi = EXFAT_SB(root->d_sb);
-#else
-static int exfat_show_options(struct seq_file *m, struct vfsmount *mnt)
-{
-	struct exfat_sb_info *sbi = EXFAT_SB(mnt->mnt_sb);
-#endif
 	struct exfat_mount_options *opts = &sbi->options;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	if (__kuid_val(opts->fs_uid))
@@ -2272,11 +2255,7 @@ static int exfat_read_root(struct inode *inode)
 
 	exfat_save_attr(inode, ATTR_SUBDIR);
 	inode->i_mtime = inode->i_atime = inode->i_ctime = ts;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,00)
 	set_nlink(inode, info.NumSubdirs + 2);
-#else
-	inode->i_nlink = info.NumSubdirs + 2;
-#endif
 
 	return 0;
 }
