@@ -66,3 +66,4 @@ obj-$(CONFIG_TEGRA_THROUGHPUT)	+= tegra-throughput.o
 obj-$(CONFIG_SENSORS_AK8963)	+= akm8963.o
 obj-y           += driver_bck.o
 obj-$(CONFIG_BLUEDROID_PM)      += bluedroid_pm.o
+obj-$(CONFIG_UID_CPUTIME)	+= uid_cputime.o
