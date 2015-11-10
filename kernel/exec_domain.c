@@ -68,6 +68,11 @@ lookup_exec_domain(unsigned int personality)
 				goto out;
 	}
 
+/* DoPa (20151110) - Android 6.x's 'libc_init_common.cpp' calls personality(8) for
+	every process. This triggers an SELinux policy violation when request_module()
+	below is called. Since there is not - and never will be - such a module, disable
+	the call rather than allowing every process the 'request_module' privilege.
+
 #ifdef CONFIG_MODULES
 	read_unlock(&exec_domains_lock);
 	request_module("personality-%d", pers);
@@ -79,7 +84,7 @@ lookup_exec_domain(unsigned int personality)
 				goto out;
 	}
 #endif
-
+*/
 	ep = &default_exec_domain;
 out:
 	read_unlock(&exec_domains_lock);
